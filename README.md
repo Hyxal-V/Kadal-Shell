@@ -3,7 +3,7 @@
 
 - **Window Manager ⚙️**      -   [Hyprland](https://github.com/hyprwm/Hyprland)
 - **Lockscreen 🔒**          -   [Hyprlock](https://github.com/hyprwm/hyprlock)
-- **Widgets & Bar 🧩**       -   [AGS](https://github.com/Aylur/ags)
+- **Widgets & Bar 🧩**       -   [AGS](https://github.com/Aylur/ags) / [Quickshell](https://quickshell.org/)
 - **Launcher 🚀**            -   [Rofi](https://github.com/davatorium/rofi)   
 - **Notification-Daemon 🔔** -   [SwayNC](https://github.com/ErikReider/SwayNotificationCenter) 
 - **Terminal 🖥️**            -   [Kitty](https://github.com/kovidgoyal/kitty)   

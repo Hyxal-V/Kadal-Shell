@@ -1,3 +1,3 @@
-killall ags swaybg
+killall quickshell swaybg
 ~/.config/hypr/swaybg.sh &  
-~/.config/hypr/ags.sh & 
+~/.config/hypr/quickshell.sh &
