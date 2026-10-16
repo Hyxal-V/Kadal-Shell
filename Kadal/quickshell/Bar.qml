@@ -14,7 +14,7 @@ Scope {
 
     // ─── Global Bar Scale ─────────────────────────────────────
     // Change this value to scale everything in the bar proportionally (e.g. 1.0, 1.2, 1.5)
-    property real barScale: 1
+    property real barScale: 1.2
 
     // ─── Full Media Player Popup State ────────────────────────
     property bool showFullPlayer: false

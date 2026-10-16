@@ -425,30 +425,7 @@ PanelWindow {
                     }
 
                     // Power off button
-                    Rectangle {
-                        width: 28
-                        height: 28
-                        radius: 14
-                        color: powerArea.containsMouse ? Qt.lighter(controlPanelWindow.bgColor2, 1.4) : controlPanelWindow.bgColor2
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "\uf011" // power-off
-                            font { family: "Font Awesome 6 Free"; weight: Font.Bold; pixelSize: 11 }
-                            color: controlPanelWindow.fgColor
-                        }
-
-                        MouseArea {
-                            id: powerArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                Quickshell.execDetached(["wlogout"])
-                                controlPanelWindow.closeRequested()
-                            }
-                        }
-                    }
+           
 
                     // Close button
                     Rectangle {

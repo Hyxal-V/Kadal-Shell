@@ -24,6 +24,65 @@ PanelWindow {
     property string mainFont: "Rowdies"
     property string iconFont: "JetBrains Mono"
 
+    function formatTime(seconds) {
+        if (!seconds || isNaN(seconds) || seconds < 0) return "0:00"
+        let totalSecs = Math.floor(seconds)
+        let mins = Math.floor(totalSecs / 60)
+        let secs = totalSecs % 60
+        return mins + ":" + (secs < 10 ? "0" : "") + secs
+    }
+
+    Timer {
+        id: positionTimer
+        interval: 250
+        running: popupWindow.isOpen && (popupWindow.player?.isPlaying ?? false) && (!seekContainer || !seekContainer.isSeeking)
+        repeat: true
+        onTriggered: {
+            if (popupWindow.player) {
+                try {
+                    popupWindow.player.positionChanged()
+                } catch(e) {}
+                if (seekContainer) {
+                    seekContainer.currentPosition = popupWindow.player.position
+                }
+            }
+        }
+    }
+
+    onIsOpenChanged: {
+        if (isOpen && player) {
+            try { player.positionChanged() } catch(e) {}
+            if (seekContainer) seekContainer.currentPosition = player.position
+        }
+    }
+
+    onPlayerChanged: {
+        if (player) {
+            try { player.positionChanged() } catch(e) {}
+            if (seekContainer) seekContainer.currentPosition = player.position
+        }
+    }
+
+    Connections {
+        target: popupWindow.player
+        ignoreUnknownSignals: true
+        function onPositionChanged() {
+            if (seekContainer && !seekContainer.isSeeking && popupWindow.player) {
+                seekContainer.currentPosition = popupWindow.player.position
+            }
+        }
+        function onTrackChanged() {
+            if (seekContainer && popupWindow.player) {
+                seekContainer.currentPosition = popupWindow.player.position
+            }
+        }
+        function onIsPlayingChanged() {
+            if (seekContainer && popupWindow.player) {
+                seekContainer.currentPosition = popupWindow.player.position
+            }
+        }
+    }
+
     anchors {
         top: true
         bottom: true
@@ -64,7 +123,7 @@ PanelWindow {
         Behavior on y {
             NumberAnimation {
                 id: slideAnim
-                duration: popupWindow.isOpen ? 38 : 25 // Note: Fixed the typo "38" back to 380 here
+                duration: popupWindow.isOpen ? 38 : 25
                 easing.type: popupWindow.isOpen ? Easing.OutBack : Easing.InQuad
             }
         }
@@ -538,8 +597,8 @@ PanelWindow {
                             height: 14
 
                             property real trackLength: popupWindow.player?.length ?? 0
-                            property real trackPos: popupWindow.player?.position ?? 0
-                            property real progress: trackLength > 0 ? Math.min(1.0, Math.max(0.0, trackPos / trackLength)) : 0
+                            property real currentPosition: popupWindow.player?.position ?? 0
+                            property real progress: trackLength > 0 ? Math.min(1.0, Math.max(0.0, currentPosition / trackLength)) : 0
                             property bool isSeeking: false
                             property real seekRatio: 0
 
@@ -604,7 +663,11 @@ PanelWindow {
                                 onReleased: (mouse) => {
                                     if (seekContainer.isSeeking && seekContainer.trackLength > 0 && popupWindow.player) {
                                         let ratio = Math.max(0.0, Math.min(1.0, mouse.x / width))
-                                        popupWindow.player.position = ratio * seekContainer.trackLength
+                                        let newPos = ratio * seekContainer.trackLength
+                                        try {
+                                            popupWindow.player.position = newPos
+                                        } catch(e) {}
+                                        seekContainer.currentPosition = newPos
                                         seekContainer.isSeeking = false
                                     }
                                 }
@@ -620,7 +683,7 @@ PanelWindow {
                             Layout.fillWidth: true
 
                             Text {
-                                text: popupWindow.formatTime(seekContainer.isSeeking ? (seekContainer.seekRatio * seekContainer.trackLength) : (popupWindow.player?.position ?? 0))
+                                text: popupWindow.formatTime(seekContainer.isSeeking ? (seekContainer.seekRatio * seekContainer.trackLength) : seekContainer.currentPosition)
                                 font { family: "Inter"; pixelSize: 10; weight: Font.Medium }
                                 color: "#71717A"
                             }
@@ -628,7 +691,7 @@ PanelWindow {
                             Item { Layout.fillWidth: true }
 
                             Text {
-                                text: popupWindow.formatTime(popupWindow.player?.length ?? 0)
+                                text: popupWindow.formatTime(seekContainer.trackLength)
                                 font { family: "Inter"; pixelSize: 10; weight: Font.Medium }
                                 color: "#71717A"
                             }
