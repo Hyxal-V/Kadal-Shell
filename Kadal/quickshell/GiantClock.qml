@@ -2,10 +2,15 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import QtQuick.Effects
+
 PanelWindow {
     id: backgroundClock
-     property string mainFont: "Rowdies"
-     property int dotSize:8
+
+    // ─── Scale & Configuration ────────────────────────────────
+    property real clockScale: 1.2
+    property string mainFont: "Rowdies"
+    property int dotSize: Math.round(8 * clockScale)
+
     // Position the clock widget on the screen
     anchors {
         top: true
@@ -27,114 +32,138 @@ PanelWindow {
 
     Rectangle {
         id: clockContainer
-        width: 280
-        height: 150
+        width: Math.round(280 * backgroundClock.clockScale)
+        height: Math.round(150 * backgroundClock.clockScale)
         color: "#121213" // Dark background matching the image
-        radius: 40 // Pill-shaped rounded corners
+        radius: Math.round(40 * backgroundClock.clockScale) // Pill-shaped rounded corners
         border.color: "#F2E5BC" // Cream colored border
-        border.width: 7
+        border.width: Math.round(7 * backgroundClock.clockScale)
 
         // Top Left Diamond
         Rectangle {
-            width: backgroundClock.dotSize; height:backgroundClock.dotSize
+            width: backgroundClock.dotSize
+            height: backgroundClock.dotSize
             color: "#FFF7DA"
             rotation: 45
-            anchors { top: parent.top; left: parent.left; topMargin: 30; leftMargin: 40 }
-              layer.enabled: true
-                        layer.effect: MultiEffect {
-                    shadowEnabled: true
-                    shadowColor: "#FFF7DA" 
-                    shadowBlur: 0.3
-                    shadowHorizontalOffset: 0
-                    shadowVerticalOffset: 0
-                }
+            anchors {
+                top: parent.top
+                left: parent.left
+                topMargin: Math.round(30 * backgroundClock.clockScale)
+                leftMargin: Math.round(40 * backgroundClock.clockScale)
+            }
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                shadowEnabled: true
+                shadowColor: "#FFF7DA" 
+                shadowBlur: 0.3
+                shadowHorizontalOffset: 0
+                shadowVerticalOffset: 0
+            }
         }
         
         // Top Right Diamond
         Rectangle {
-            width: backgroundClock.dotSize; height: backgroundClock.dotSize;
+            width: backgroundClock.dotSize
+            height: backgroundClock.dotSize
             color: "#FFF7DA"
             rotation: 45
-            anchors { top: parent.top; right: parent.right; topMargin: 30; rightMargin: 40 }
-              layer.enabled: true
-                        layer.effect: MultiEffect {
-                    shadowEnabled: true
-                    shadowColor: "#FFF7DA" 
-                    shadowBlur: 0.3
-                    shadowHorizontalOffset: 0
-                    shadowVerticalOffset: 0
-                }
+            anchors {
+                top: parent.top
+                right: parent.right
+                topMargin: Math.round(30 * backgroundClock.clockScale)
+                rightMargin: Math.round(40 * backgroundClock.clockScale)
+            }
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                shadowEnabled: true
+                shadowColor: "#FFF7DA" 
+                shadowBlur: 0.3
+                shadowHorizontalOffset: 0
+                shadowVerticalOffset: 0
+            }
         }
         
         // Bottom Left Diamond
         Rectangle {
-            width: backgroundClock.dotSize; height: backgroundClock.dotSize;
+            width: backgroundClock.dotSize
+            height: backgroundClock.dotSize
             color: "#FFF7DA"
             rotation: 45
-            anchors { bottom: parent.bottom; left: parent.left; bottomMargin: 30; leftMargin: 40 }
-              layer.enabled: true
-                        layer.effect: MultiEffect {
-                    shadowEnabled: true
-                    shadowColor: "#FFF7DA" 
-                    shadowBlur: 0.3
-                    shadowHorizontalOffset: 0
-                    shadowVerticalOffset: 0
-                }
+            anchors {
+                bottom: parent.bottom
+                left: parent.left
+                bottomMargin: Math.round(30 * backgroundClock.clockScale)
+                leftMargin: Math.round(40 * backgroundClock.clockScale)
+            }
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                shadowEnabled: true
+                shadowColor: "#FFF7DA" 
+                shadowBlur: 0.3
+                shadowHorizontalOffset: 0
+                shadowVerticalOffset: 0
+            }
         }
         
         // Bottom Right Diamond
         Rectangle {
-            width: backgroundClock.dotSize; height: backgroundClock.dotSize;
+            width: backgroundClock.dotSize
+            height: backgroundClock.dotSize
             color: "#FFF7DA"
             rotation: 45
-            anchors { bottom: parent.bottom; right: parent.right; bottomMargin: 30; rightMargin: 40 }  
+            anchors {
+                bottom: parent.bottom
+                right: parent.right
+                bottomMargin: Math.round(30 * backgroundClock.clockScale)
+                rightMargin: Math.round(40 * backgroundClock.clockScale)
+            }
             layer.enabled: true
-                        layer.effect: MultiEffect {
-                    shadowEnabled: true
-                    shadowColor: "#FFF7DA" 
-                    shadowBlur: 0.3
-                    shadowHorizontalOffset: 0
-                    shadowVerticalOffset: 0
-                }
+            layer.effect: MultiEffect {
+                shadowEnabled: true
+                shadowColor: "#FFF7DA" 
+                shadowBlur: 0.3
+                shadowHorizontalOffset: 0
+                shadowVerticalOffset: 0
+            }
         }
 
         Column {
             anchors.centerIn: parent
-            spacing: 8
-            
+            spacing: Math.round(8 * backgroundClock.clockScale)
 
             Text {
                 id: timeText
-               font.family:backgroundClock.mainFont
-               layer.enabled: true
-                        layer.effect: MultiEffect {
+                font.family: backgroundClock.mainFont
+                topPadding: Math.round(10 * backgroundClock.clockScale)
+                font.pixelSize: Math.round(60 * backgroundClock.clockScale)
+                color: "#FFF7DA"
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                layer.enabled: true
+                layer.effect: MultiEffect {
                     shadowEnabled: true
                     shadowColor: "#FFF7DA" 
                     shadowBlur: 0.2
                     shadowHorizontalOffset: 0
                     shadowVerticalOffset: 0
                 }
-               topPadding:10
-               
-               font.pixelSize: 60
-                color: "#FFF7DA"
-                anchors.horizontalCenter: parent.horizontalCenter
-            
             }
 
             Text {
                 id: dateText
-                font.pixelSize: 12
-                   layer.enabled: true
-                        layer.effect: MultiEffect {
+                font.pixelSize: Math.round(12 * backgroundClock.clockScale)
+                color: "#FFF7DA"
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                layer.enabled: true
+                layer.effect: MultiEffect {
                     shadowEnabled: true
                     shadowColor: "#FFF7DA" 
                     shadowBlur: 0.9
                     shadowHorizontalOffset: 0
                     shadowVerticalOffset: 0
                 }
-                color: "#FFF7DA"
-           anchors.horizontalCenter: parent.horizontalCenter}
+            }
         }
 
         Timer {

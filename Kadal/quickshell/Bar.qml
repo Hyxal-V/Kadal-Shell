@@ -9,17 +9,35 @@ import Quickshell.Services.Pipewire
 import Quickshell.Io
 import Quickshell.Services.SystemTray
 
-PanelWindow {
+Scope {
     id: root
 
-    anchors {
-        bottom: true
-        left: true
-        right: true
+    // ─── Global Bar Scale ─────────────────────────────────────
+    // Change this value to scale everything in the bar proportionally (e.g. 1.0, 1.2, 1.5)
+    property real barScale: 1
+
+    // ─── Full Media Player Popup State ────────────────────────
+    property bool showFullPlayer: false
+
+    // ─── Control Panel Popup State ────────────────────────────
+    property bool showControlPanel: false
+
+    // ─── Notification Panel Popup State ───────────────────────
+    property bool showNotificationPanel: false
+
+    // ─── App Launcher State ───────────────────────────────────
+    property bool showAppLauncher: false
+
+    function toggleAppLauncher() {
+        if (!root.showAppLauncher) {
+            root.showFullPlayer = false
+            root.showControlPanel = false
+            root.showNotificationPanel = false
+        }
+        root.showAppLauncher = !root.showAppLauncher
     }
-    implicitHeight: 40
-    color: bgColor
-signal toggleControlPanelRequested()
+
+    signal toggleControlPanelRequested()
     PwObjectTracker {
         id: sinkTracker
         objects: [ Pipewire.defaultAudioSink ]
@@ -29,6 +47,8 @@ signal toggleControlPanelRequested()
     property color bgColor: "#121213"
     property color bgColor2: "#1E1E1E"
     property color fgColor: "#B5B5B5"
+    property color accentColor: "#F2E5BC"
+    property color accentColorGlow: "#FFF7DA"
     property string mainFont: "Rowdies"
     property string iconFont: "JetBrains Mono"
     // ─── Media Player Logic ──────────────────────────────────
@@ -59,7 +79,18 @@ signal toggleControlPanelRequested()
         function onPlaybackStateChanged() { root.activePlayer = findActivePlayer() }
     }
 
-    Item {
+    PanelWindow {
+        id: barWindow
+
+        anchors {
+            bottom: true
+            left: true
+            right: true
+        }
+        implicitHeight: Math.round(40 * root.barScale)
+        color: root.bgColor
+
+        Item {
         anchors.fill: parent
 
         // ─── LEFT ─────────────────────────────────────────────
@@ -69,22 +100,22 @@ signal toggleControlPanelRequested()
                 left: parent.left
                 top: parent.top
                 bottom: parent.bottom
-                leftMargin: 16
+                leftMargin: Math.round(16 * root.barScale)
             }
-            spacing: 8
+            spacing: Math.round(8 * root.barScale)
             clip: true
 
             Rectangle {
-                implicitWidth: 82
-                implicitHeight: 26
+                implicitWidth: Math.round(82 * root.barScale)
+                implicitHeight: Math.round(26 * root.barScale)
                 anchors.verticalCenter: parent.verticalCenter
                 color: root.bgColor2
-                radius: 30
+                radius: Math.round(30 * root.barScale)
 
                 Text {
                     anchors.centerIn: parent
                     color: root.fgColor
-                    font { family: root.mainFont; pixelSize: 13 }
+                    font { family: root.mainFont; pixelSize: Math.round(13 * root.barScale) }
                     text: Qt.formatDateTime(new Date(), "hh:mm A")
 
                     Timer {
@@ -97,22 +128,22 @@ signal toggleControlPanelRequested()
             }
 
             Rectangle {
-                implicitWidth: (wsRow.implicitWidth ?? 0) + 24
-                implicitHeight: 26
+                implicitWidth: (wsRow.implicitWidth ?? 0) + Math.round(24 * root.barScale)
+                implicitHeight: Math.round(26 * root.barScale)
                 anchors.verticalCenter: parent.verticalCenter
                 color: root.bgColor2
-                radius: 30
+                radius: Math.round(30 * root.barScale)
                 
                 Row {
                     id: wsRow
                     anchors.centerIn: parent
-                    spacing: 6
+                    spacing: Math.round(6 * root.barScale)
                     
                     Repeater {
                         model: Hyprland.workspaces.values
                         delegate: Item {
-                            width: 18
-                            height: 18
+                            width: Math.round(18 * root.barScale)
+                            height: Math.round(18 * root.barScale)
                             readonly property bool isActive: modelData.id === Hyprland.focusedWorkspace?.id
                             
                             Rectangle {
@@ -125,13 +156,39 @@ signal toggleControlPanelRequested()
                             Text {
                                 anchors.centerIn: parent
                                 text: modelData.id
-                                font { family: "Inter"; pixelSize: 10; weight: Font.DemiBold }
+                                font { family: "Inter"; pixelSize: Math.round(10 * root.barScale); weight: Font.DemiBold }
                                 color: isActive ? root.bgColor : root.fgColor
                             }
                         }
                     }
                 }
             }
+
+            // App Launcher Trigger Button
+   //         Rectangle {
+   //             implicitWidth: Math.round(28 * root.barScale)
+   //             implicitHeight: Math.round(26 * root.barScale)
+   //             anchors.verticalCenter: parent.verticalCenter
+   //             color: root.showAppLauncher ? Qt.lighter(root.bgColor2, 1.4) : (launcherMouseArea.containsMouse ? Qt.lighter(root.bgColor2, 1.3) : root.bgColor2)
+   //             radius: Math.round(30 * root.barScale)
+//
+   //             Behavior on color { ColorAnimation { duration: 150 } }
+//
+   //             Text {
+   //                 anchors.centerIn: parent
+   //                 text: "\uf009" // 9-dot app grid
+   //                 font { family: "Font Awesome 6 Free"; weight: Font.Bold; pixelSize: Math.round(11 * root.barScale) }
+   //                 color: root.showAppLauncher ? root.accentColor : root.fgColor
+   //             }
+//
+   //             MouseArea {
+   //                 id: launcherMouseArea
+   //                 anchors.fill: parent
+   //                 hoverEnabled: true
+   //                 cursorShape: Qt.PointingHandCursor
+   //                 onClicked: root.toggleAppLauncher()
+   //             }
+   //         }
 
            Rectangle {
                 id: titlePill
@@ -148,10 +205,10 @@ signal toggleControlPanelRequested()
 
                 // 3. Animate the width (uses 'width' instead of 'implicitWidth' for animations)
                 clip: true
-                width: showPill ? ((titleRow.implicitWidth ?? 0) + 32) : 0
-                height: 26
+                width: showPill ? ((titleRow.implicitWidth ?? 0) + Math.round(32 * root.barScale)) : 0
+                height: Math.round(26 * root.barScale)
                 color: root.bgColor2
-                radius: 30
+                radius: Math.round(30 * root.barScale)
                 
                 // 4. The Animations
                 Behavior on opacity {
@@ -164,11 +221,11 @@ signal toggleControlPanelRequested()
                 RowLayout {
                     id: titleRow
                     anchors.centerIn: parent
-                    spacing: 8
+                    spacing: Math.round(8 * root.barScale)
                     
                     Text {
                         text: ToplevelManager.activeToplevel?.activated ?? false ? "\uf2d0" : "\uf015"
-                        font { family: "Font Awesome 6 Free"; weight: Font.Bold; pixelSize: 12 }
+                        font { family: "Font Awesome 6 Free"; weight: Font.Bold; pixelSize: Math.round(12 * root.barScale) }
                         color: root.fgColor
                     }
                     
@@ -179,35 +236,19 @@ signal toggleControlPanelRequested()
                             return t.length > 60 ? t.slice(0, 57) + "…" : t
                         }
                         color: root.fgColor
-                        font { family: "Inter"; pixelSize: 12; weight: Font.DemiBold }
+                        font { family: "Inter"; pixelSize: Math.round(12 * root.barScale); weight: Font.DemiBold }
                         elide: Text.ElideRight
-                        Layout.maximumWidth: 400
+                        Layout.maximumWidth: Math.round(400 * root.barScale)
                     }
                 }
             }
         }
 
         // ─── CENTER (Media) ───────────────────────────────────
-  Rectangle {
-    MouseArea {
-                    id: btnMouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true 
-                    
-                    // Make the pill lighter when hovered so it feels like a button
-                    onEntered: parent.color = Qt.lighter(root.bgColor2, 1.5)
-                    onExited: parent.color = root.bgColor2
-
-                    onClicked: {
-                       Quickshell.execDetached(["playerctl", "play-pause"])
-
-                        
-                    }
-             
-                        }
+        Rectangle {
             id: centerPill
             anchors.centerIn: parent
-            
+
             // 1. Define your visibility condition here
             property bool showPill: true
 
@@ -218,12 +259,36 @@ signal toggleControlPanelRequested()
             // 3. Animate the width (expands from 0 to full size)
             // We use 'clip: true' so the text doesn't spill out while it's shrinking
             clip: true
-            width: showPill ? Math.min(centerContentRow.implicitWidth + 32, maxAvailableWidth) : 0
-            height: 26
-            color: root.bgColor2
-            radius: 30
+            width: showPill ? Math.min(centerContentRow.implicitWidth + Math.round(32 * root.barScale), maxAvailableWidth) : 0
+            height: Math.round(26 * root.barScale)
+            color: root.showFullPlayer ? Qt.lighter(root.bgColor2, 1.4) : (btnMouseArea.containsMouse ? Qt.lighter(root.bgColor2, 1.3) : root.bgColor2)
+            radius: Math.round(30 * root.barScale)
 
             readonly property real maxAvailableWidth: parent.width * 0.4
+
+            Behavior on color { ColorAnimation { duration: 150 } }
+
+            MouseArea {
+                id: btnMouseArea
+                anchors.fill: parent
+                hoverEnabled: true 
+                cursorShape: Qt.PointingHandCursor
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+
+                onClicked: (mouse) => {
+                    if (mouse.button === Qt.RightButton) {
+                        if (root.activePlayer) root.activePlayer.togglePlaying()
+                        else Quickshell.execDetached(["playerctl", "play-pause"])
+                    } else {
+                        if (!root.showFullPlayer) {
+                            root.showControlPanel = false
+                            root.showNotificationPanel = false
+                            root.showAppLauncher = false
+                        }
+                        root.showFullPlayer = !root.showFullPlayer
+                    }
+                }
+            }
 
             // 4. The Animations
             Behavior on opacity {
@@ -236,29 +301,29 @@ signal toggleControlPanelRequested()
             Row {
                 id: centerContentRow
                 anchors.centerIn: parent
-                spacing: 10
+                spacing: Math.round(10 * root.barScale)
 
                 // Fake visualizer
                 Row {
                     id: vizRow
-                    spacing: 3
+                    spacing: Math.round(3 * root.barScale)
                     anchors.verticalCenter: parent.verticalCenter
                     visible: root.activePlayer && root.activePlayer.isPlaying
 
                     Repeater {
                         model: 4
                         Rectangle {
-                            width: 3
-                            height: 6
-                            radius: 2
+                            width: Math.round(3 * root.barScale)
+                            height: Math.round(6 * root.barScale)
+                            radius: Math.round(2 * root.barScale)
                             color: root.fgColor
                             anchors.verticalCenter: parent.verticalCenter
 
                             SequentialAnimation on height {
                                 loops: Animation.Infinite
                                 running: root.activePlayer && root.activePlayer.isPlaying
-                                NumberAnimation { to: [14, 10, 16, 12][index]; duration: [400, 600, 350, 500][index]; easing.type: Easing.InOutSine }
-                                NumberAnimation { to: 6; duration: [450, 550, 300, 600][index]; easing.type: Easing.InOutSine }
+                                NumberAnimation { to: Math.round([14, 10, 16, 12][index] * root.barScale); duration: [400, 600, 350, 500][index]; easing.type: Easing.InOutSine }
+                                NumberAnimation { to: Math.round(6 * root.barScale); duration: [450, 550, 300, 600][index]; easing.type: Easing.InOutSine }
                             }
                         }
                     }
@@ -267,14 +332,14 @@ signal toggleControlPanelRequested()
                 // Song text + debug fallback
                 Column {
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: 2
+                    spacing: Math.round(2 * root.barScale)
 
                     Text {
                         id: centerText
-                        width: Math.min(implicitWidth, centerPill.maxAvailableWidth - (vizRow.visible ? 70 : 40))
+                        width: Math.min(implicitWidth, centerPill.maxAvailableWidth - (vizRow.visible ? Math.round(70 * root.barScale) : Math.round(40 * root.barScale)))
                         elide: Text.ElideMiddle
                         color: root.fgColor
-                        font { family: root.mainFont; pixelSize: 12; weight: Font.Medium }
+                        font { family: root.mainFont; pixelSize: Math.round(12 * root.barScale); weight: Font.Medium }
                         verticalAlignment: Text.AlignVCenter
 
                         text: {
@@ -295,7 +360,7 @@ signal toggleControlPanelRequested()
                         // you won't actually see this debug text anymore.
                         visible: !root.activePlayer && Mpris.players.values.length > 0
                         text: "Paused / Stopped (" + Mpris.players.values.length + " players)"
-                        font { pixelSize: 10 }
+                        font { pixelSize: Math.round(10 * root.barScale) }
                         color: "#666"
                     }
                 }
@@ -309,64 +374,100 @@ signal toggleControlPanelRequested()
                 right: parent.right
                 top: parent.top
                 bottom: parent.bottom
-                rightMargin: 16
+                rightMargin: Math.round(16 * root.barScale)
             }
-            spacing: 10
+            spacing: Math.round(10 * root.barScale)
             layoutDirection: Qt.RightToLeft
-Rectangle {
+            Rectangle {
                 id: notifPill
-                implicitWidth: 42
-                implicitHeight: 26
+                implicitWidth: Math.round((notifPanelPopup.unreadCount > 0 ? 50 : 42) * root.barScale)
+                implicitHeight: Math.round(26 * root.barScale)
                 anchors.verticalCenter: parent.verticalCenter
-                color: root.bgColor2
-                radius: 30
-                
-                Text {
+                color: root.showNotificationPanel ? Qt.lighter(root.bgColor2, 1.4) : (notifMouseArea.containsMouse ? Qt.lighter(root.bgColor2, 1.3) : root.bgColor2)
+                radius: Math.round(30 * root.barScale)
+
+                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on implicitWidth { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
+
+                Row {
                     anchors.centerIn: parent
-                    text: "\uf0f3" 
-                    font { family: "Font Awesome 6 Free"; weight: Font.Bold; pixelSize: 13 }
-                    color: root.fgColor
+                    spacing: Math.round(4 * root.barScale)
+
+                    Text {
+                        text: notifPanelPopup.dndEnabled ? "\uf1f6" : "\uf0f3" // bell-slash or bell
+                        font { family: "Font Awesome 6 Free"; weight: Font.Bold; pixelSize: Math.round(13 * root.barScale) }
+                        color: notifPanelPopup.dndEnabled ? notifPanelPopup.accentColor : (notifPanelPopup.unreadCount > 0 ? "#FFFFFF" : root.fgColor)
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    // Unread notification badge dot
+                    Rectangle {
+                        visible: notifPanelPopup.unreadCount > 0
+                        width: Math.round(6 * root.barScale)
+                        height: Math.round(6 * root.barScale)
+                        radius: width / 2
+                        color: root.accentColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
-Process {
-    id: swayncProc
-    command: ["swaync-client", "-op"]
-}
 
-MouseArea {
-    anchors.fill: parent
-    hoverEnabled: true
-    onEntered: parent.color = Qt.lighter(root.bgColor2, 1.5)
-    onExited: parent.color = root.bgColor2
+                MouseArea {
+                    id: notifMouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
 
-    onClicked: {
-        // Toggle the 'running' state to execute it
-        swayncProc.running = true
-        
-        // Optional: keep your original signal
-      
-    }
-}}
+                    onClicked: {
+                        if (!root.showNotificationPanel) {
+                            root.showFullPlayer = false
+                            root.showControlPanel = false
+                            root.showAppLauncher = false
+                        }
+                        root.showNotificationPanel = !root.showNotificationPanel
+                    }
+                }
+            }
+
             // --- Combined Status Pill (Volume + Battery + WiFi) ---
             Rectangle {
-                implicitWidth: (statusRow.implicitWidth ?? 0) + 32
-                implicitHeight: 26
+                id: statusPill
+                implicitWidth: (statusRow.implicitWidth ?? 0) + Math.round(32 * root.barScale)
+                implicitHeight: Math.round(26 * root.barScale)
                 anchors.verticalCenter: parent.verticalCenter
-                color: root.bgColor2
-                radius: 30
+                color: root.showControlPanel ? Qt.lighter(root.bgColor2, 1.4) : (statusMouseArea.containsMouse ? Qt.lighter(root.bgColor2, 1.3) : root.bgColor2)
+                radius: Math.round(30 * root.barScale)
+
+                Behavior on color { ColorAnimation { duration: 150 } }
+
+                MouseArea {
+                    id: statusMouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+
+                    onClicked: {
+                        if (!root.showControlPanel) {
+                            root.showFullPlayer = false
+                            root.showNotificationPanel = false
+                            root.showAppLauncher = false
+                        }
+                        root.showControlPanel = !root.showControlPanel
+                    }
+                }
                 
                 Row {
                     
                     id: statusRow
                     anchors.centerIn: parent
-                    spacing: 12
+                    spacing: Math.round(12 * root.barScale)
 
                     // WiFi Icon
                     Row {
-                        spacing: 6
+                        spacing: Math.round(6 * root.barScale)
                         Text {
                             id: wifiIcon
                             text: "\ufaa9" // fallback disconnected
-                            font { family: "Font Awesome 5 Free Solid"; weight: Font.Bold; pixelSize: 15 }
+                            font { family: "Font Awesome 5 Free Solid"; weight: Font.Bold; pixelSize: Math.round(15 * root.barScale) }
                             color: root.fgColor
                             topPadding: 1
                         }
@@ -374,7 +475,7 @@ MouseArea {
 
                     // Volume
                     Row {
-                        spacing: 2
+                        spacing: Math.round(2 * root.barScale)
                         Text {
                             readonly property var defaultSink: Pipewire.defaultAudioSink
                             readonly property var audio: defaultSink?.audio ?? null
@@ -389,7 +490,7 @@ MouseArea {
                                 if (volPercent <= 33) return "\uf027" // fa-volume-down
                                 else return "" // fa-volume-up
                             }
-                            font { family: root.iconFont; weight: Font.Bold; pixelSize: 15 }
+                            font { family: root.iconFont; weight: Font.Bold; pixelSize: Math.round(15 * root.barScale) }
                             topPadding: 1
                             color: root.fgColor
                         }
@@ -404,7 +505,7 @@ MouseArea {
                             return `${icon} ${pct}%`
                         }
                         color: root.fgColor
-                          font { family: "Inter"; pixelSize: 12; weight: Font.Bold } 
+                        font { family: "Inter"; pixelSize: Math.round(12 * root.barScale); weight: Font.Bold } 
                         leftPadding: -2
                     }
                 }
@@ -466,11 +567,11 @@ MouseArea {
 
    Rectangle {
     // Widened slightly to accommodate the third item
-    implicitWidth: sysRow.implicitWidth + 32
-    implicitHeight: 26
+    implicitWidth: sysRow.implicitWidth + Math.round(32 * root.barScale)
+    implicitHeight: Math.round(26 * root.barScale)
     anchors.verticalCenter: parent.verticalCenter
     color: root.bgColor2
-    radius: 30
+    radius: Math.round(30 * root.barScale)
 
     
     // 1. Timer to poll data every 2 seconds
@@ -520,15 +621,15 @@ MouseArea {
     Row {
         id: sysRow
         anchors.centerIn: parent
-        spacing: 12 
+        spacing: Math.round(12 * root.barScale)
         
         // --- CPU Section ---
         Row {
-            spacing: 6
+            spacing: Math.round(6 * root.barScale)
             Text { 
                 topPadding: 1.3
                 text: "\uf2db" 
-                font { family: "JetBrainsMono NF"; weight: Font.Solid; pixelSize: 12 } 
+                font { family: "JetBrainsMono NF"; weight: Font.Solid; pixelSize: Math.round(12 * root.barScale) } 
                 color: root.fgColor 
             }
             Text { 
@@ -536,41 +637,41 @@ MouseArea {
                 id: cpuText
                 text: "..." 
                 color: root.fgColor
-                 font { family: "Inter"; pixelSize: 12; weight: Font.Bold } 
+                font { family: "Inter"; pixelSize: Math.round(12 * root.barScale); weight: Font.Bold } 
             }
         }
 
         // --- Temp Section ---
         Row {
-            spacing: 6
+            spacing: Math.round(6 * root.barScale)
             topPadding: 1.3
             Text { 
                 text: "" // Thermometer icon (nf-fa-thermometer_half)
-                font { family: "JetBrainsMono NF"; weight: Font.Solid; pixelSize: 12 } 
+                font { family: "JetBrainsMono NF"; weight: Font.Solid; pixelSize: Math.round(12 * root.barScale) } 
                 color: root.fgColor 
             }
             Text { 
                 id: tempText
                 text: "..." 
                 color: root.fgColor
-                 font { family: "Inter"; pixelSize: 12; weight: Font.Bold } 
+                font { family: "Inter"; pixelSize: Math.round(12 * root.barScale); weight: Font.Bold } 
             }
         }
 
         // --- RAM Section ---
         Row {
-            spacing: 6
+            spacing: Math.round(6 * root.barScale)
             topPadding: 1.3
             Text { 
                 text: "" 
-                font { family: "JetBrainsMono NF"; weight: Font.Solid; pixelSize: 12 } 
+                font { family: "JetBrainsMono NF"; weight: Font.Solid; pixelSize: Math.round(12 * root.barScale) } 
                 color: root.fgColor 
             }
             Text { 
                 id: ramText
                 text: "..." 
                 color: root.fgColor
-                font { family: "Inter"; pixelSize: 12; weight: Font.Bold } 
+                font { family: "Inter"; pixelSize: Math.round(12 * root.barScale); weight: Font.Bold } 
             }
         }
     }
@@ -580,42 +681,179 @@ MouseArea {
             Rectangle {
                 id: trayPill
                 visible: SystemTray.items.values.length > 0
-                implicitWidth: trayRow.implicitWidth + 24
-                implicitHeight: 26
+                implicitWidth: trayRow.implicitWidth + Math.round(24 * root.barScale)
+                implicitHeight: Math.round(26 * root.barScale)
                 anchors.verticalCenter: parent.verticalCenter
                 color: root.bgColor2
-                radius: 30
+                radius: Math.round(30 * root.barScale)
 
                 Row {
                     id: trayRow
                     anchors.centerIn: parent
-                    spacing: 8
+                    spacing: Math.round(8 * root.barScale)
 
                     Repeater {
                         model: SystemTray.items.values
-                        delegate: MouseArea {
-                            width: 16
-                            height: 16
-                            acceptedButtons: Qt.LeftButton | Qt.RightButton
-                            
-                            onClicked: (mouse) => {
-                                if (mouse.button === Qt.LeftButton) {
-                                    modelData.activate()
-                                } else if (mouse.button === Qt.RightButton) {
-                                    modelData.openMenu() 
+                        delegate: Item {
+                            id: trayDelegate
+                            width: Math.round(20 * root.barScale)
+                            height: Math.round(20 * root.barScale)
+
+                            QsMenuAnchor {
+                                id: trayMenuAnchor
+                                menu: modelData.menu
+                                anchor {
+                                    item: trayDelegate
+                                    edges: Edges.Top
+                                    gravity: Edges.Top
+                                    adjustment: PopupAdjustment.All
                                 }
                             }
 
-                            Image {
+                            Rectangle {
                                 anchors.fill: parent
+                                radius: Math.round(4 * root.barScale)
+                                color: trayMouseArea.containsMouse ? Qt.lighter(root.bgColor2, 1.5) : "transparent"
+                                Behavior on color { ColorAnimation { duration: 150 } }
+                            }
+
+                            Image {
+                                anchors.centerIn: parent
+                                width: Math.round(16 * root.barScale)
+                                height: Math.round(16 * root.barScale)
                                 source: modelData.icon
                                 fillMode: Image.PreserveAspectFit
                                 mipmap: true
+                            }
+
+                            MouseArea {
+                                id: trayMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+
+                                onClicked: (mouse) => {
+                                    if (mouse.button === Qt.RightButton) {
+                                        if (modelData.hasMenu && modelData.menu) {
+                                            if (trayMenuAnchor.visible) trayMenuAnchor.close()
+                                            else trayMenuAnchor.open()
+                                        } else {
+                                            modelData.secondaryActivate(0, 0)
+                                        }
+                                    } else if (mouse.button === Qt.MiddleButton) {
+                                        modelData.secondaryActivate(0, 0)
+                                    } else {
+                                        if (modelData.hasMenu && modelData.menu) {
+                                            if (trayMenuAnchor.visible) trayMenuAnchor.close()
+                                            else trayMenuAnchor.open()
+                                        } else {
+                                            modelData.activate(0, 0)
+                                        }
+                                    }
+                                }
+
+                                onWheel: (wheel) => {
+                                    modelData.scroll(wheel.angleDelta.y > 0 ? 1 : -1)
+                                }
                             }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+    // ─── Full Media Player Popup ──────────────────────────────
+    FullMediaPlayer {
+        id: fullMediaPlayer
+        isOpen: root.showFullPlayer
+        player: root.activePlayer
+        bgColor: root.bgColor
+        bgColor2: root.bgColor2
+        fgColor: root.fgColor
+        mainFont: root.mainFont
+        iconFont: root.iconFont
+        onCloseRequested: root.showFullPlayer = false
+    }
+
+    // ─── Control Panel Popup ──────────────────────────────────
+    ControlPanel {
+        id: controlPanelPopup
+        isOpen: root.showControlPanel
+        barHeight: barWindow.implicitHeight
+        bgColor: root.bgColor
+        bgColor2: root.bgColor2
+        fgColor: root.fgColor
+        accentColor: root.accentColor
+        accentColorGlow: root.accentColorGlow
+        mainFont: root.mainFont
+        iconFont: root.iconFont
+        dndEnabled: notifPanelPopup.dndEnabled
+        onDndToggleRequested: notifPanelPopup.toggleDnd()
+        onOpenNotificationCenterRequested: {
+            root.showControlPanel = false
+            root.showNotificationPanel = true
+        }
+        onCloseRequested: root.showControlPanel = false
+    }
+
+    // ─── Notification Panel Popup ─────────────────────────────
+    NotificationPanel {
+        id: notifPanelPopup
+        isOpen: root.showNotificationPanel
+        barHeight: barWindow.implicitHeight
+        bgColor: root.bgColor
+        bgColor2: root.bgColor2
+        fgColor: root.fgColor
+        accentColor: root.accentColor
+        accentColorGlow: root.accentColorGlow
+        mainFont: root.mainFont
+        iconFont: root.iconFont
+        onCloseRequested: root.showNotificationPanel = false
+        onNewNotification: (notif) => {
+            toastManager.showToast(notif)
+        }
+    }
+
+    // ─── Notification Toasts (Heads-Up Banners) ───────────────
+    NotificationToasts {
+        id: toastManager
+        bgColor: root.bgColor
+        bgColor2: root.bgColor2
+        fgColor: root.fgColor
+        accentColor: root.accentColor
+        accentColorGlow: root.accentColorGlow
+        mainFont: root.mainFont
+        iconFont: root.iconFont
+        onOpenPanelRequested: {
+            root.showFullPlayer = false
+            root.showControlPanel = false
+            root.showAppLauncher = false
+            root.showNotificationPanel = true
+        }
+    }
+
+    // ─── App Launcher Popup ───────────────────────────────────
+    AppLauncher {
+        id: appLauncherPopup
+        isOpen: root.showAppLauncher
+        barHeight: barWindow.implicitHeight
+        bgColor: root.bgColor
+        bgColor2: root.bgColor2
+        bgColor3: "#262626"
+        fgColor: root.fgColor
+        accentColor: root.accentColor
+        accentColorGlow: root.accentColorGlow
+        mainFont: root.mainFont
+        iconFont: root.iconFont
+        onCloseRequested: root.showAppLauncher = false
+        onOpenRequested: {
+            root.showFullPlayer = false
+            root.showControlPanel = false
+            root.showNotificationPanel = false
+            root.showAppLauncher = true
         }
     }
 }

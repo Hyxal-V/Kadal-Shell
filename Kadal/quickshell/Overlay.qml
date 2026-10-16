@@ -32,7 +32,7 @@ Scope {
         anchors.top: true 
         exclusiveZone: 0
         implicitWidth: 400
-        implicitHeight: 70 // Slightly taller to allow for the bounce "overshoot"
+        implicitHeight: 100 // Taller to allow for the bounce "overshoot"
         color: "transparent"
         mask: Region {}
 
@@ -40,23 +40,17 @@ Scope {
             id: osdBackground
             anchors.horizontalCenter: parent.horizontalCenter
             width: 400
-            height: 60
+            height: 54 // Slimmed down for a sleeker profile
             color: "#121213"
-            radius: 20 
-			
+            radius: 16 
 
             // --- THE BOUNCE ANIMATION ---
-            // Hidden: -height (completely off-screen)
-            // Visible: 0 (at the very top)
             y: root.shouldShowOsd ? 0 : -height 
-            
-            // We keep a subtle opacity change so it doesn't look harsh if it clips
             opacity: root.shouldShowOsd ? 1.0 : 0.0
 
             Behavior on y { 
                 NumberAnimation { 
                     duration: 450
-                    // OutBack creates the "spring/bounce" effect
                     easing.type: root.shouldShowOsd ? Easing.OutBack : Easing.InCubic 
                 } 
             }
@@ -73,15 +67,16 @@ Scope {
             RowLayout {
                 anchors {
                     fill: parent
-                    leftMargin: 25
-                    rightMargin: 25
-                    topMargin: 5 
+                    leftMargin: 20
+                    rightMargin: 20
+                    topMargin: 4 // Compensate for the squared top
                 }
-                spacing: 15
+                spacing: 16
 
+                // Icon
                 Text {
                     id: volIcon
-                    font.pixelSize: 26
+                    font.pixelSize: 22
                     color: (Pipewire.defaultAudioSink?.audio.muted || currentVol <= 0) ? "#66ffffff" : "white"
                     readonly property real currentVol: Pipewire.defaultAudioSink?.audio.volume ?? 0
                     text: {
@@ -90,34 +85,53 @@ Scope {
                         if (currentVol < 0.66) return "󰖀";
                         return "󰕾";
                     }
-                    
-                    // Subtle scale bounce when the icon changes
-                    Behavior on scale { NumberAnimation { duration: 100 } }
                 }
 
-                // Modern Slider
+                // Elegant Slider
                 Rectangle {
                     Layout.fillWidth: true
-                    implicitHeight: 4
-                    radius: 2
-                    color: "#33ffffff"
+                    implicitHeight: 6
+                    radius: 3
+                    color: "#2A2A2E" // Darker, subtle background track
 
                     Rectangle {
-                        anchors.verticalCenter: parent.verticalCenter
-                        height: 10
-                        radius: 5
+                        anchors {
+                            left: parent.left
+                            top: parent.top
+                            bottom: parent.bottom
+                        }
+                        radius: 3
                         color: (Pipewire.defaultAudioSink?.audio.muted) ? "#66ffffff" : "white"
-                        width: parent.width * (Pipewire.defaultAudioSink?.audio.volume ?? 0)
+                        width: parent.width * Math.min(1.0, Math.max(0.0, Pipewire.defaultAudioSink?.audio.volume ?? 0))
 
                         Behavior on width {
-                            NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
                         }
                         
+                        // Clean circular thumb
                         Rectangle {
-                            anchors.right: parent.right
-                            width: 4; height: 10; radius: 5
-                            color: "#66ffffff"
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.horizontalCenter: parent.right
+                            width: 12
+                            height: 12
+                            radius: 6
+                            color: "white"
+                            visible: !Pipewire.defaultAudioSink?.audio.muted && width > 0
                         }
+                    }
+                }
+
+                // Percentage Text
+                Text {
+                    Layout.preferredWidth: 45 // Fixed width prevents the slider from jittering
+                    horizontalAlignment: Text.AlignRight
+                    font.family: "Inter" 
+                    font.pixelSize: 13
+                    font.weight: Font.Bold
+                    color: (Pipewire.defaultAudioSink?.audio.muted) ? "#66ffffff" : "white"
+                    text: {
+                        if (Pipewire.defaultAudioSink?.audio.muted) return "Muted";
+                        return Math.round((Pipewire.defaultAudioSink?.audio.volume ?? 0) * 100) + "%";
                     }
                 }
             }

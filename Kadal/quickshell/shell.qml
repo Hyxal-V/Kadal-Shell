@@ -1,3 +1,4 @@
+//@ pragma UseQApplication
 // shell.qml
 import Quickshell
 import QtQuick
