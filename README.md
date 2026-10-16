@@ -8,7 +8,6 @@ A collection of Linux dotfiles and desktop customizations built by **Hyxal V**.
 [![Kadal / കടൽ Hyprland Rice](https://img.youtube.com/vi/wnhXKuqia6M/0.jpg)](https://www.youtube.com/watch?v=wnhXKuqia6M)
 ![Kadal Preview](Kadal/media/Music%20Player.png)
 
-![Kadal Preview](Kadal/media/Music%20Playe)
 
 
 ![Kadal Lockscreen](Kadal/media/Lockscreen.png)
